@@ -8,7 +8,6 @@ import os
 from pygame import mixer
 from collections import deque
 
-# Initialize MediaPipe
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(
     static_image_mode=False,
@@ -18,11 +17,9 @@ hands = mp_hands.Hands(
 )
 mp_draw = mp.solutions.drawing_utils
 
-# Initialize Pygame for sound
 pygame.init()
 mixer.init()
 
-# Game constants
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
 FRUIT_TYPES = ['apple', 'mango', 'watermelon', 'grapes']
@@ -31,7 +28,7 @@ SPAWN_WIDTH = 400  # Width of spawn area in the middle
 SPAWN_X_MIN = (WINDOW_WIDTH - SPAWN_WIDTH) // 2
 SPAWN_X_MAX = SPAWN_X_MIN + SPAWN_WIDTH
 
-# Load fruit images
+#fruit images
 def load_fruit_images():
     fruit_images = {}
     # Load regular fruits
@@ -57,7 +54,6 @@ def load_fruit_images():
             cv2.circle(img, (FRUIT_SIZE//2, FRUIT_SIZE//2), FRUIT_SIZE//2, color, -1)
             fruit_images[fruit] = img
     
-    # Load bomb image
     bomb_path = os.path.join('images', 'bomb.png')
     if os.path.exists(bomb_path):
         img = cv2.imread(bomb_path, cv2.IMREAD_UNCHANGED)
@@ -84,7 +80,6 @@ class Fruit:
         
         self.image = fruit_images[self.type]
         self.radius = FRUIT_SIZE // 2
-        # Spawn in the middle area
         self.x = random.randint(SPAWN_X_MIN + self.radius, SPAWN_X_MAX - self.radius)
         self.y = WINDOW_HEIGHT + self.radius
         self.speed = random.randint(8, 12)
@@ -110,21 +105,16 @@ class Fruit:
                 # Create a region of interest (ROI) for the image
                 roi = frame[max(0, y1):min(WINDOW_HEIGHT, y2), max(0, x1):min(WINDOW_WIDTH, x2)]
                 
-                # Get the corresponding part of the fruit image
                 img_roi = self.image[max(0, -y1):min(self.image.shape[0], WINDOW_HEIGHT-y1),
                                    max(0, -x1):min(self.image.shape[1], WINDOW_WIDTH-x1)]
                 
-                # If the image has an alpha channel (PNG with transparency)
                 if img_roi.shape[2] == 4:
-                    # Split the image into color and alpha channels
                     bgr = img_roi[:, :, :3]
                     alpha = img_roi[:, :, 3] / 255.0
                     
-                    # Blend the image with the frame
                     for c in range(3):
                         roi[:, :, c] = (1 - alpha) * roi[:, :, c] + alpha * bgr[:, :, c]
                 else:
-                    # If no alpha channel, just copy the image
                     roi[:] = img_roi
 
     def slice(self, slice_line):
@@ -133,7 +123,6 @@ class Fruit:
             return True
         return False
 
-# Helper function for line-circle intersection
 def intersects_circle(p1, p2, center, radius):
     # p1 = (x1, y1), p2 = (x2, y2) are points on the line segment
     # center = (cx, cy) is the circle center
@@ -144,7 +133,6 @@ def intersects_circle(p1, p2, center, radius):
     cx, cy = center
     r = radius
 
-    # Vector from p1 to p2
     dx, dy = x2 - x1, y2 - y1
     # Vector from p1 to circle center
     fx, fy = cx - x1, cy - y1
@@ -159,12 +147,10 @@ def intersects_circle(p1, p2, center, radius):
     closest_x = x1 + t * dx
     closest_y = y1 + t * dy
 
-    # Check if the closest point lies within the line segment
     # This uses a small tolerance for floating point comparisons
     on_segment = (min(x1, x2) - 0.1 <= closest_x <= max(x1, x2) + 0.1 and
                   min(y1, y2) - 0.1 <= closest_y <= max(y1, y2) + 0.1)
 
-    # Calculate the distance from the circle center to the closest point on the line
     dist_sq = (closest_x - cx)**2 + (closest_y - cy)**2
 
     # If the closest point is on the segment and its distance to the center is <= radius, it intersects
