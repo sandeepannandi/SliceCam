@@ -1,4 +1,4 @@
-# OpenCV Fruit Ninja
+# SliceCam
 
 A hand-tracking version of the classic Fruit Ninja game using OpenCV and MediaPipe.
 
